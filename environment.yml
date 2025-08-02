@@ -1,13 +1,14 @@
-name: base
+name: thz_project
 channels:
-  - conda-forge
   - defaults
-  - https://repo.anaconda.com/pkgs/main
-  - https://repo.anaconda.com/pkgs/r
-  - https://repo.anaconda.com/pkgs/msys2
+  - conda-forge
 dependencies:
-  - anaconda-anon-usage=0.5.0=py312hfc23b7f_100
-  - anaconda_powershell_prompt=1.1.0=haa95532_0
+  - python
+  - numpy
+  - matplotlib
+  - ipykernel
+  - scipy
+  - pandas
   - anaconda_prompt=1.1.0=haa95532_0
   - annotated-types=0.6.0=py312haa95532_0
   - archspec=0.2.3=pyhd3eb1b0_0
