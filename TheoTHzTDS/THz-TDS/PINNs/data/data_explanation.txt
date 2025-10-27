@@ -1,0 +1,16 @@
+#####################
+### Data Overview ###
+#####################
+
+simple_data contains scans taken in 1 sample (silicon). 
+The thickness is ~3000 microns.
+The reference pulse for all these samples is given in the file ref2.pulse
+
+#############
+### Usage ###
+#############
+
+Usage is rather simple, The extractor class takes numpy arrays as it's arguments for data, the following approach is reccomended:
+    data_table = pd.read_csv("Add your location here").to_numpy()
+
+Data being used in the class should follow the schematic of these example datasets.
