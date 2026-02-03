@@ -1,0 +1,13 @@
+1929 samples: 50 microns
+hor: n_e: 1.79
+ver: n_0: 1.54
+
+quartz slides 
+
+
+gaas-quartz sample:
+
+
+gaas quartz gaas
+500 microns gaas 
+1mm quartz
