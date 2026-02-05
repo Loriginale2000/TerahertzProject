@@ -12,11 +12,12 @@ def gen_loss_function(y_simulated, y_exp, alpha:float=1):
 
 ## Bayesian optimization based on gaussian process regression is implemented with gp_minimize
 class BayesianLayeredExtractor():
-    def __init__(self, reference_pulse, experimental_pulse, deltat, layers_init, optimize_mask=None, optimization_bounds=[0.3, 0.01, 0.20e-3]):
+    def __init__(self, reference_pulse, experimental_pulse, deltat, layers_init,optimization_bounds, optimize_mask=None):
         super().__init__()
         self.reference_pulse = reference_pulse.clone().detach()
         self.experimental_pulse = experimental_pulse.clone().detach()
         self.deltat = deltat
+        self.optimization_bounds = optimization_bounds
 
         self.n_init = [np.real(layer[0]) for layer in layers_init]
         self.k_init = [np.imag(layer[0]) for layer in layers_init]

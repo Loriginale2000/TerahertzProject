@@ -1,18 +1,5 @@
-import torch
-import numpy as np
-from skopt import gp_minimize
-from .Simulate import simulate_parallel
-
-
-# Define loss function for model
-def gen_loss_function(y_simulated, y_exp, alpha: float):
-    return alpha * torch.sqrt(torch.nn.functional.mse_loss(y_simulated, y_exp))
-
-
-
-## Bayesian optimization based on gaussian process regression is implemented with gp_minimize
 class BayesianLayeredExtractor():
-    def __init__(self, reference_pulse, experimental_pulse, deltat, layers_init, optimization_bounds=None, optimize_mask=None):
+    def __init__(self, reference_pulse, experimental_pulse, deltat, layers_init, optimize_mask=None):
         super().__init__()
         self.reference_pulse = reference_pulse.clone().detach()
         self.experimental_pulse = experimental_pulse.clone().detach()
@@ -23,12 +10,6 @@ class BayesianLayeredExtractor():
         self.D_init = [layer[1] for layer in layers_init]
         
         self.num_layers = len(layers_init)
-
-        # Store custom bounds if provided
-        if optimization_bounds is not None:
-            self.optimization_bounds = optimization_bounds
-        else:
-            self.optimization_bounds = None
 
         if optimize_mask is None:
             # Default: optimize everything
@@ -71,28 +52,15 @@ class BayesianLayeredExtractor():
 
         # Define bounds for only the parameters being optimized
         bounds = []
-        # If custom bounds provided, use them; otherwise, use defaults
         for kind, i in optimization_indices:
-            if self.optimization_bounds is not None:
-                # Expecting [n_delta, k_delta, d_delta] for single layer
-                n_delta, k_delta, d_delta = self.optimization_bounds
-                if kind == 'n':
-                    bounds.append((self.n_init[i] - n_delta, self.n_init[i] + n_delta))
-                elif kind == 'k':
-                    bounds.append((self.k_init[i] - k_delta, self.k_init[i] + k_delta))
-                elif kind == 'D':
-                    lower = max(1e-8, self.D_init[i] - d_delta)
-                    upper = self.D_init[i] + d_delta
-                    bounds.append((lower, upper))
-            else:
-                if kind == 'n':
-                    bounds.append((self.n_init[i] - 0.1, self.n_init[i] + 0.1))
-                elif kind == 'k':
-                    bounds.append((self.k_init[i] - 0.01, self.k_init[i] + 0.01))
-                elif kind == 'D':
-                    lower = max(1e-8, self.D_init[i] - thickness_delta)
-                    upper = self.D_init[i] + thickness_delta
-                    bounds.append((lower, upper))
+            if kind == 'n':
+                bounds.append((self.n_init[i] - 0.1, self.n_init[i] + 0.1))
+            elif kind == 'k':
+                bounds.append((self.k_init[i] - 0.01, self.k_init[i] + 0.01))
+            elif kind == 'D':
+                lower = max(1e-8, self.D_init[i] - thickness_delta)  # Prevent negative thickness, 1e-8 to prevent 0 error in log
+                upper = self.D_init[i] + thickness_delta
+                bounds.append((lower, upper))
 
         print("Search Boundaries for Optimized Parameters:")
         for (kind, i), b in zip(optimization_indices, bounds):
@@ -117,6 +85,3 @@ class BayesianLayeredExtractor():
             idx += 1
 
         return [(n + 1j * k, D) for n, k, D in zip(full_n, full_k, full_D)]
-
-
-
