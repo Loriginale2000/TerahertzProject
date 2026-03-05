@@ -101,6 +101,8 @@ class LayeredExtractor(nn.Module):
     def optimize(self, num_iterations=100, verbose=True, updates=10, alpha=1):
         print(f'Fine-tuning {sum(m.count(True) for m in self.optimize_mask)} parameters for {num_iterations} iterations.')
 
+        # Track n values and loss at each iteration
+
         for iteration in range(num_iterations):
             self.optimizer.zero_grad()
             start = perf_counter() # perf_counter for timing sections of optimization
@@ -117,6 +119,7 @@ class LayeredExtractor(nn.Module):
             self.optimizer_time = perf_counter() - start
 
             self.loss_history.append(loss.item())
+
 
             if loss.item() < self.best_loss:
                 self.best_loss = loss.item()

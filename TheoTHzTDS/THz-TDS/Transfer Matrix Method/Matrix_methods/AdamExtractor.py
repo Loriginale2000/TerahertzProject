@@ -18,7 +18,7 @@ def gen_loss_function(y_simulated, y_exp, alpha:float=1):
 
 ## General optimizer to find n_j, k_j, and D_j (thickness) in the time domain
 class LayeredExtractor(nn.Module):
-    def __init__(self, reference_pulse, experimental_pulse, deltat, layers_init, optimize_mask=None, lr=1e-3):
+    def __init__(self, reference_pulse, experimental_pulse, deltat, layers_init, optimize_mask=None, lr=1e-2):
         super().__init__()
         
         self.reference_pulse = reference_pulse.clone().detach()
