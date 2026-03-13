@@ -204,7 +204,11 @@ class LossLandscapeVisualizer:
                         axes[idx].axvline(opt_params[param_name], 
                                         color=color, linestyle='--', 
                                         linewidth=2, alpha=0.7,
-                                        label=f'{opt_name}')
+                                        label=f'{opt_name} final param')
+                        axes[idx].axhline(loss, 
+                                        color=color, linestyle='-', 
+                                        linewidth=2, alpha=0.7,
+                                        label=f'{opt_name} final loss')
                         axes[idx].scatter([opt_params[param_name]], [loss],
                                         color=color, s=100, zorder=5,
                                         edgecolors='white', linewidths=2)
@@ -380,7 +384,7 @@ def example_usage():
     fig1, _ = visualizer.plot_2d_slice('n', 'k', 
                                        optimizer_paths=optimizer_paths,
                                        resolution=100)
-    print("Saved: loss_landscape_2d.png")
+    print("Generated 2D loss landscape")
     
     # Plot 1D slices
     print("\nGenerating 1D slices...")
@@ -393,7 +397,7 @@ def example_usage():
         optimizer_values=optimizer_final_values,
         resolution=200
     )
-    print("Saved: loss_landscape_1d.png")
+    print("Generated 1D slices")
     
     # Plot convergence
     print("\nGenerating convergence plots...")
@@ -406,7 +410,7 @@ def example_usage():
     }
     
     fig3, _ = visualizer.plot_convergence_comparison(optimizer_histories)
-    print("Saved: convergence_comparison.png")
+    print("Generated convergence comparison")
     
     # Analyze local minima
     print("\nAnalyzing local minima...")
