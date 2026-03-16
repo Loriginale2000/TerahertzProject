@@ -120,24 +120,6 @@ class LossLandscapeVisualizer:
         surf = ax2.plot_surface(P1, P2, Z, cmap='viridis', alpha=0.8,
                                 edgecolor='none', antialiased=True)
         
-        # Plot optimizer paths in 3D
-        if optimizer_paths:
-            for opt_name, path in optimizer_paths.items():
-                if len(path) > 0:
-                    path_array = np.array(path)
-                    color = colors.get(opt_name, 'white')
-                    
-                    # Get loss values along path
-                    z_vals = []
-                    for point in path:
-                        params = fixed_params.copy()
-                        params[param1] = point[0]
-                        params[param2] = point[1]
-                        z_vals.append(self.loss_function(params))
-                    
-                    ax2.plot(path_array[:, 0], path_array[:, 1], z_vals,
-                            color=color, linewidth=2, label=f'{opt_name}')
-        
         ax2.set_xlabel(param1, fontsize=10)
         ax2.set_ylabel(param2, fontsize=10)
         ax2.set_zlabel('Loss', fontsize=10)
@@ -204,11 +186,7 @@ class LossLandscapeVisualizer:
                         axes[idx].axvline(opt_params[param_name], 
                                         color=color, linestyle='--', 
                                         linewidth=2, alpha=0.7,
-                                        label=f'{opt_name} final param')
-                        axes[idx].axhline(loss, 
-                                        color=color, linestyle='-', 
-                                        linewidth=2, alpha=0.7,
-                                        label=f'{opt_name} final loss')
+                                        label=f'{opt_name}')
                         axes[idx].scatter([opt_params[param_name]], [loss],
                                         color=color, s=100, zorder=5,
                                         edgecolors='white', linewidths=2)
@@ -366,12 +344,12 @@ def example_usage():
     # Mock optimizer trajectories (replace with your actual optimization paths)
     adam_path = [
         (1.1, 0.1), (1.15, 0.12), (1.2, 0.15), (1.25, 0.18),
-        (1.28, 0.19), (1.30, 0.20), (1.32, 0.21)  # Gets stuck here
+        (1.28, 0.19), (1.30, 0.20), (1.32, 0.21) 
     ]
     
     bayesian_path = [
         (1.8, 0.4), (1.7, 0.35), (1.6, 0.3), (1.55, 0.25),
-        (1.52, 0.22), (1.50, 0.20)  # Finds better minimum
+        (1.52, 0.22), (1.50, 0.20)  
     ]
     
     optimizer_paths = {
@@ -384,7 +362,7 @@ def example_usage():
     fig1, _ = visualizer.plot_2d_slice('n', 'k', 
                                        optimizer_paths=optimizer_paths,
                                        resolution=100)
-    print("Generated 2D loss landscape")
+    print("Saved: loss_landscape_2d.png")
     
     # Plot 1D slices
     print("\nGenerating 1D slices...")
@@ -397,7 +375,7 @@ def example_usage():
         optimizer_values=optimizer_final_values,
         resolution=200
     )
-    print("Generated 1D slices")
+    print("Saved: loss_landscape_1d.png")
     
     # Plot convergence
     print("\nGenerating convergence plots...")
@@ -410,7 +388,7 @@ def example_usage():
     }
     
     fig3, _ = visualizer.plot_convergence_comparison(optimizer_histories)
-    print("Generated convergence comparison")
+    print("Saved: convergence_comparison.png")
     
     # Analyze local minima
     print("\nAnalyzing local minima...")
