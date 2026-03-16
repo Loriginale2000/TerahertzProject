@@ -4,6 +4,7 @@ from skopt import gp_minimize
 from .Simulate import simulate_parallel
 
 
+
 # Define loss function for model
 def gen_loss_function(y_simulated, y_exp, alpha:float=1):
     return alpha * torch.sqrt(torch.nn.functional.mse_loss(y_simulated, y_exp))
@@ -12,12 +13,11 @@ def gen_loss_function(y_simulated, y_exp, alpha:float=1):
 
 ## Bayesian optimization based on gaussian process regression is implemented with gp_minimize
 class BayesianLayeredExtractor():
-    def __init__(self, reference_pulse, experimental_pulse, deltat, layers_init,optimization_bounds, optimize_mask=None):
+    def __init__(self, reference_pulse, experimental_pulse, deltat, layers_init, optimize_mask=None, optimization_bounds=[0.1, 0.01, 0.15e-3]):
         super().__init__()
         self.reference_pulse = reference_pulse.clone().detach()
         self.experimental_pulse = experimental_pulse.clone().detach()
         self.deltat = deltat
-        self.optimization_bounds = optimization_bounds
 
         self.n_init = [np.real(layer[0]) for layer in layers_init]
         self.k_init = [np.imag(layer[0]) for layer in layers_init]
@@ -47,6 +47,10 @@ class BayesianLayeredExtractor():
             if opt_k: optimization_indices.append(('k', i))
             if opt_D: optimization_indices.append(('D', i))
 
+        # Initialise history list
+        self.iteration_history = []
+        self.loss_history = []
+
         def objective(nkd_values):
             # Reconstruct full layer parameters from nkd_values and fixed init values
             full_n = self.n_init.copy()
@@ -62,9 +66,20 @@ class BayesianLayeredExtractor():
                 elif kind == 'D':
                     full_D[i] = nkd_values[idx]
                 idx += 1
+            
+            # Save the current n, k, D values for every layer to history
+            self.iteration_history.append({
+                'n': full_n.copy(),
+                'k': full_k.copy(),
+                'd': full_D.copy()
+            })
 
+            # simulate output with updated parameters before calculating loss
             layers = [(n + 1j * k, D) for n, k, D in zip(full_n, full_k, full_D)]
             y_simulated = simulate_parallel(self.reference_pulse, layers, self.deltat, noise_level=0)[1][:len(self.experimental_pulse)]
+
+            # record loss history using the n ewly computed y_simulated
+            self.loss_history.append(gen_loss_function(y_simulated, self.experimental_pulse, alpha).item())
             return gen_loss_function(y_simulated, self.experimental_pulse, alpha).item()
 
         # Define bounds for only the parameters being optimized
@@ -100,6 +115,8 @@ class BayesianLayeredExtractor():
             idx += 1
 
         return [(n + 1j * k, D) for n, k, D in zip(full_n, full_k, full_D)]
+
+
 
 
 

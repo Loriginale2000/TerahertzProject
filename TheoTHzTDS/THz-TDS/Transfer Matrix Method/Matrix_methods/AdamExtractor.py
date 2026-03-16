@@ -5,6 +5,7 @@ from .Simulate import simulate_parallel
 from time import perf_counter
 import numpy as np
 
+
 # TODO: Change return method at the end to replicate the one in bayes model.
 
 # Define loss function for model
@@ -18,7 +19,7 @@ def gen_loss_function(y_simulated, y_exp, alpha:float=1):
 
 ## General optimizer to find n_j, k_j, and D_j (thickness) in the time domain
 class LayeredExtractor(nn.Module):
-    def __init__(self, reference_pulse, experimental_pulse, deltat, layers_init, optimize_mask=None, lr=1e-2):
+    def __init__(self, reference_pulse, experimental_pulse, deltat, layers_init, optimize_mask=None, lr=1e-3):
         super().__init__()
         
         self.reference_pulse = reference_pulse.clone().detach()
@@ -101,6 +102,8 @@ class LayeredExtractor(nn.Module):
     def optimize(self, num_iterations=100, verbose=True, updates=10, alpha=1):
         print(f'Fine-tuning {sum(m.count(True) for m in self.optimize_mask)} parameters for {num_iterations} iterations.')
 
+        self.iteration_history = [] 
+
         for iteration in range(num_iterations):
             self.optimizer.zero_grad()
             start = perf_counter() # perf_counter for timing sections of optimization
@@ -118,6 +121,22 @@ class LayeredExtractor(nn.Module):
 
             self.loss_history.append(loss.item())
 
+            # Save current n, k, D values for every layer after each step
+            with torch.no_grad():
+                iter_snapshot = {'n': [], 'k': [], 'd': []}
+                n_idx = k_idx = D_idx = 0
+                for i, (opt_n, opt_k, opt_D) in enumerate(self.optimize_mask):
+                    n = self.n_params[n_idx] if opt_n else self.fixed_n[i]
+                    k = self.k_params[k_idx] if opt_k else self.fixed_k[i]
+                    D = self.log_D_params[D_idx].exp() if opt_D else self.fixed_log_D[i].exp()
+                    if opt_n: n_idx += 1
+                    if opt_k: k_idx += 1
+                    if opt_D: D_idx += 1
+                    iter_snapshot['n'].append(n.item())
+                    iter_snapshot['k'].append(k.item())
+                    iter_snapshot['d'].append(D.item())
+                self.iteration_history.append(iter_snapshot)
+                
             if loss.item() < self.best_loss:
                 self.best_loss = loss.item()
                 self.best_n_params = [n.clone().detach() if n is not None else None for n in self.n_params]
