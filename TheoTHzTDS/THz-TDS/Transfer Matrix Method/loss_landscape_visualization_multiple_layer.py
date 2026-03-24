@@ -131,14 +131,14 @@ def visualize_multilayer_landscape(x_exp, true_x_exp, deltat, L,
     if bayesian_history is not None:
         bayesian_paths_per_layer = []
         for layer_idx in range(num_layers):
-            path = [(abs(p['n'][layer_idx]), abs(p['k'][layer_idx])) 
+            path = [(p['n'][layer_idx], p['k'][layer_idx])
                     for p in bayesian_history]
             bayesian_paths_per_layer.append(path)
 
     if adam_history is not None:
         adam_paths_per_layer = []
         for layer_idx in range(num_layers):
-            path = [(abs(p['n'][layer_idx]), abs(p['k'][layer_idx])) 
+            path = [(p['n'][layer_idx], p['k'][layer_idx])
                     for p in adam_history]
             adam_paths_per_layer.append(path)
 
@@ -166,8 +166,33 @@ def visualize_multilayer_landscape(x_exp, true_x_exp, deltat, L,
             fixed_layers=fixed_layers
         )
         
-        param_ranges = param_ranges_per_layer[layer_idx - 1]
-        viz = LossLandscapeVisualizer(loss_func, param_ranges)
+        param_ranges = param_ranges_per_layer[layer_idx - 1].copy()
+
+        # ADAPTING K VALUES
+        k_values = []
+
+        # USING ABS() TO ENSURE IM LOOKING AT THE MAGNITUDE OF K
+        if bayesian_history is not None:
+            k_values += [abs(p['k'][layer_idx - 1]) for p in bayesian_history]
+
+        if adam_history is not None:
+            k_values += [abs(p['k'][layer_idx - 1]) for p in adam_history]
+
+        if len(k_values) > 0:
+            k_min = min(k_values)
+            k_max = max(k_values)
+            
+            # CREATING A PADDING MARGIN TO THE PLOT RANGES
+            margin = 0.1 * (k_max - k_min) if k_max > k_min else 1e-6
+            
+            # ENSURING K DOESNT GET NEGATIVE
+            plot_k_min = max(0, k_min - margin)
+            plot_k_max = k_max + margin
+            
+            param_ranges['k'] = (plot_k_min, plot_k_max)
+
+
+        viz = LossLandscapeVisualizer(loss_func, param_ranges, cmap='managua')
         
         final_values = {
             'Bayesian': bayesian_params[layer_idx - 1],
@@ -177,21 +202,22 @@ def visualize_multilayer_landscape(x_exp, true_x_exp, deltat, L,
         #====================================================================
         # Visualization 1: 1D slices
         #====================================================================
+      
         print(f"\n[Layer {layer_idx}] Generating 1D parameter slices...")
         
         fig1, axes = viz.plot_1d_slices(
             optimizer_values=final_values,
-            resolution=100
+            resolution=200
         )
         plt.suptitle(f'Layer {layer_idx} - 1D Parameter Slices', 
-                    fontsize=14, y=1.02)
+                    fontsize=14,fontname='Arial', y=1.05)
         plt.savefig(f'layer_{layer_idx}_1d_slices.png', 
                    dpi=300, bbox_inches='tight')
         print(f"Saved: layer_{layer_idx}_1d_slices.png")
         plt.show()
         
         #====================================================================
-        # Visualization 2: n vs k landscape with optimizer paths
+        # Visualization 2.a: n vs k landscape with optimizer paths
         #====================================================================
         print(f"\n[Layer {layer_idx}] Generating n vs k landscape...")
         
@@ -199,24 +225,66 @@ def visualize_multilayer_landscape(x_exp, true_x_exp, deltat, L,
                    final_values['ADAM']['d']) / 2
 
         # Build optimizer_paths dict for this layer
-        optimizer_paths = {}
-        if bayesian_paths_per_layer is not None:
-            optimizer_paths['Bayesian'] = bayesian_paths_per_layer[layer_idx - 1]
-        if adam_paths_per_layer is not None:
-            optimizer_paths['ADAM'] = adam_paths_per_layer[layer_idx - 1]
+        optimizer_paths_nk = {}
+        if bayesian_history is not None:
+         optimizer_paths_nk['Bayesian'] = [
+        (p['n'][layer_idx - 1], abs(p['k'][layer_idx - 1]))
+        for p in bayesian_history]
+
+        if adam_history is not None:
+         optimizer_paths_nk['ADAM'] = [
+         (p['n'][layer_idx - 1], abs(p['k'][layer_idx - 1]))
+         for p in adam_history]
 
         fig2, (ax_contour, ax_3d) = viz.plot_2d_slice(
             'n', 'k',
             fixed_params={'d': d_fixed},
             resolution=resolution,
-            optimizer_paths=optimizer_paths if optimizer_paths else None
+            optimizer_paths=optimizer_paths_nk if optimizer_paths_nk else None
         )
 
         fig2.suptitle(f'Layer {layer_idx} - n vs k Loss Landscape', 
-                     fontsize=14, y=0.98)
+                     fontsize=14,fontname='Arial', y=1.02)
         plt.savefig(f'layer_{layer_idx}_n_vs_k.png', 
                    dpi=300, bbox_inches='tight')
         print(f"Saved: layer_{layer_idx}_n_vs_k.png")
+        plt.show()
+
+        #====================================================================
+        # Visualization 2.b: n vs d landscape with optimizer paths
+        #====================================================================
+        print(f"\n[Layer {layer_idx}] Generating n vs d landscape...")
+        
+        k_fixed = (final_values['Bayesian']['k'] + 
+                   final_values['ADAM']['k']) / 2
+
+        optimizer_paths_nd = {}
+
+        if bayesian_history is not None:
+         optimizer_paths_nd['Bayesian'] = [
+        (abs(p['n'][layer_idx - 1]), abs(p['d'][layer_idx - 1]))
+        for p in bayesian_history
+                                    ]
+
+        if adam_history is not None:
+         optimizer_paths_nd['ADAM'] = [
+        (abs(p['n'][layer_idx - 1]), abs(p['d'][layer_idx - 1]))
+        for p in adam_history
+        ]  
+
+        # Build optimizer_paths dict for this layer
+        fig2, (ax_contour, ax_3d) = viz.plot_2d_slice(
+            'n', 'd',
+            fixed_params={'k': k_fixed},
+            resolution=resolution,
+            optimizer_paths=optimizer_paths_nd if optimizer_paths_nd else None
+        )
+
+        fig2.suptitle(f'Layer {layer_idx} - n vs d Loss Landscape', 
+                     fontsize=14,fontname='Arial', y=1.02)
+        plt.savefig(f'layer_{layer_idx}_n_vs_d.png', 
+                   dpi=300, bbox_inches='tight')
+        print(f"Saved: layer_{layer_idx}_n_vs_d.png")
         plt.show()
         
         #====================================================================
@@ -407,7 +475,7 @@ def analyze_layer_interaction(x_exp, true_x_exp, deltat, L,
     
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
     
-    contour = ax1.contourf(P1, P2, Z, levels=20, cmap='viridis')
+    contour = ax1.contourf(P1, P2, Z, levels=20, cmap='twilight', alpha=0.8)
     ax1.contour(P1, P2, Z, levels=20, colors='white', alpha=0.3, linewidths=0.5)
     
     if param1 == 'n':
@@ -432,7 +500,7 @@ def analyze_layer_interaction(x_exp, true_x_exp, deltat, L,
     plt.colorbar(contour, ax=ax1, label='Loss')
     
     ax2 = fig.add_subplot(122, projection='3d')
-    surf = ax2.plot_surface(P1, P2, Z, cmap='viridis', alpha=0.8)
+    surf = ax2.plot_surface(P1, P2, Z, cmap='twilight', alpha=0.8)
     ax2.set_xlabel(f'Layer {layer1_idx} {param1}')
     ax2.set_ylabel(f'Layer {layer2_idx} {param2}')
     ax2.set_zlabel('Loss')

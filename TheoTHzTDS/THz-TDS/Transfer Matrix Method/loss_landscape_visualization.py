@@ -9,7 +9,7 @@ class LossLandscapeVisualizer:
     Visualize loss landscapes for optical parameter optimization
     """
     
-    def __init__(self, loss_function, param_ranges):
+    def __init__(self, loss_function, param_ranges, cmap='seismic'):
         """
         Initialize the visualizer
         
@@ -21,9 +21,12 @@ class LossLandscapeVisualizer:
         param_ranges : dict
             Dictionary with parameter names as keys and (min, max) tuples as values
             e.g., {'n': (1.0, 3.0), 'k': (0.0, 1.0), 'd': (50, 200)}
+        cmap : str
+            Colormap name (default: 'viridis')
         """
         self.loss_function = loss_function
         self.param_ranges = param_ranges
+        self.cmap = cmap
         
     def plot_2d_slice(self, param1, param2, fixed_params=None, 
                       resolution=50, optimizer_paths=None, figsize=(10, 8)):
@@ -71,7 +74,7 @@ class LossLandscapeVisualizer:
         
         # Contour plot
         levels = 20
-        contour = ax1.contourf(P1, P2, Z, levels=levels, cmap='viridis')
+        contour = ax1.contourf(P1, P2, Z, levels=levels, cmap=self.cmap)
         contour_lines = ax1.contour(P1, P2, Z, levels=levels, colors='white', 
                                      alpha=0.3, linewidths=0.5)
         ax1.clabel(contour_lines, inline=True, fontsize=8, fmt='%.2e')
@@ -117,7 +120,7 @@ class LossLandscapeVisualizer:
         
         # 3D surface plot
         ax2 = fig.add_subplot(122, projection='3d')
-        surf = ax2.plot_surface(P1, P2, Z, cmap='viridis', alpha=0.8,
+        surf = ax2.plot_surface(P1, P2, Z, cmap=self.cmap, alpha=0.8,
                                 edgecolor='none', antialiased=True)
         
         ax2.set_xlabel(param1, fontsize=10)
