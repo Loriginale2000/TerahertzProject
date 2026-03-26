@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import tri
 from .Simulate import simulate_parallel
 from .AdamExtractor import gen_loss_function
 
@@ -51,31 +52,40 @@ def generate_landscape_multi_layer(reference_pulse, experimental_pulse, deltat, 
 
     return results_data
 
-def plot_results_multi_layer(data, layer_idx):
-    """Plots landscapes for a specific layer index."""
-    n = [d[f'n{layer_idx}'] for d in data]
-    k = [d[f'k{layer_idx}'] for d in data]
-    thickness = [d[f'd{layer_idx}'] * 1e6 for d in data] # to µm
-    loss = [d['loss'] for d in data]
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
-    
+def plot_results_multi_layer(data, layer_idx):
+    """Plots landscapes for a specific layer index using both scatter and contour."""
+    n = np.array([d[f'n{layer_idx}'] for d in data])
+    k = np.array([d[f'k{layer_idx}'] for d in data])
+    thickness = np.array([d[f'd{layer_idx}'] * 1e6 for d in data]) # to µm
+    loss = np.array([d['loss'] for d in data])
+
     label = "Quartz" if layer_idx == 0 else "Si"
     
-    # Plot n vs k
-    img1 = ax1.scatter(n, k, c=loss, cmap='viridis', s=80, edgecolors='black', linewidths=0.2)
+    # CREATE FIGURES
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+
+    # PLOT: n v k
+    
+    cnt1 = ax1.tricontourf(n, k, loss, levels=40, cmap='managua')
+    ax1.scatter(n, k, c='white', s=5, alpha=0.2) 
     ax1.set_title(f'Loss Landscape: {label} (n vs k)')
     ax1.set_xlabel('n')
     ax1.set_ylabel('k')
-    plt.colorbar(img1, ax=ax1, label='Loss')
+    plt.colorbar(cnt1, ax=ax1, label='Loss')
 
-    # Plot n vs d
-    img2 = ax2.scatter(n, thickness, c=loss, cmap='plasma', s=80, edgecolors='black', linewidths=0.2)
+    # PLOT: n v d
+    cnt2 = ax2.tricontourf(n, thickness, loss, levels=40, cmap='magma')
     ax2.set_title(f'Loss Landscape: {label} (n vs d)')
     ax2.set_xlabel('n')
     ax2.set_ylabel('d (µm)')
-    plt.colorbar(img2, ax=ax2, label='Loss')
+    plt.colorbar(cnt2, ax=ax2, label='Loss')
 
+    plt.tight_layout()
+    plt.show()
+
+   
+    
     plt.tight_layout()
     plt.show()
 
