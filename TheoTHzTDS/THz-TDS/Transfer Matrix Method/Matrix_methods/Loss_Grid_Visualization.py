@@ -45,7 +45,7 @@ def generate_landscape_multi_layer(reference_pulse, experimental_pulse, deltat, 
         _, y_sim = simulate_parallel(reference_pulse, current_stack, deltat, noise_level=0)
         y_sim = y_sim[:len(experimental_pulse)]
         
-        # 3. Calculate and store loss
+        # 3. CALCULATE AND STORE LOSS
         loss = gen_loss_function(y_sim, experimental_pulse, alpha=1).item()
         sample_record['loss'] = loss
         results_data.append(sample_record)

@@ -101,6 +101,8 @@ def plot_grid_landscape(data, axis1, axis2, keys):
     }
     
     layer_names = {0: "Quartz", 1: "Si"} # Change this depending on our sample [layers, materials used etc.] 
+    current_layer_name = layer_names.get(keys[0][0], f"Layer {keys[0][0]}")
+
     '''We use label_map and layer_names as dictionaries to be achieve more
        efficient plotting. '''
     
@@ -144,6 +146,12 @@ def plot_grid_landscape(data, axis1, axis2, keys):
     min_y, min_x = np.unravel_index(min_idx, losses.shape)
     plt.plot(plot_x[min_x], plot_y[min_y], 'rx', markersize=14, markeredgewidth=2, label='Global Minimum')
     plt.legend()
+
+    plt.xlabel(f"{layer_names.get(x_idx, f'Layer {x_idx}')} {label_map[x_type]}")
+    plt.ylabel(f"{layer_names.get(y_idx, f'Layer {y_idx}')} {label_map[y_type]}")
+    plt.title(f"Loss Landscape & Optimizer Path: {current_layer_name}")
+    plt.legend()
+    plt.show()
 
 
     plt.tight_layout()
