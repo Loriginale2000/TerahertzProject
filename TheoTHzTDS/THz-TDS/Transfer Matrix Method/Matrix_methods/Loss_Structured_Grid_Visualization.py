@@ -100,7 +100,7 @@ def plot_grid_landscape(data, axis1, axis2, keys):
         'd': 'Thickness (d) [µm]'
     }
     
-    layer_names = {0: "Quartz", 1: "Si"} # Change this depending on our sample [layers, materials used etc.] 
+    layer_names = {0: "Quartz"} # Change this depending on our sample [layers, materials used etc.] 
     current_layer_name = layer_names.get(keys[0][0], f"Layer {keys[0][0]}")
 
     '''We use label_map and layer_names as dictionaries to be achieve more
