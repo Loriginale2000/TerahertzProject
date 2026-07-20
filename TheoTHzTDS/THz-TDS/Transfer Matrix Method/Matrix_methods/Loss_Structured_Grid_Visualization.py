@@ -131,7 +131,7 @@ def plot_grid_landscape(data, axis1, axis2, keys):
     'We create a figure to initialize plotting'
     plt.figure(figsize=(12, 6.5))
     cp = plt.contourf(X, Y, losses, levels=100, cmap='magma')
-    plt.colorbar(cp, label='Loss (MSE)')
+    plt.colorbar(cp, label='Loss (rMSE)')
 
 
     x_label = f"{layer_names.get(x_idx, f'Layer {x_idx}')} {label_map[x_type]}"
@@ -144,7 +144,7 @@ def plot_grid_landscape(data, axis1, axis2, keys):
     # WE MARK THE GLOBAL MINIMUM ON THE GRID 
     min_idx = np.argmin(losses)
     min_y, min_x = np.unravel_index(min_idx, losses.shape)
-    plt.plot(plot_x[min_x], plot_y[min_y], 'rx', markersize=14, markeredgewidth=2, label='Global Minimum')
+    plt.plot(plot_x[min_x], plot_y[min_y], 'rx', markersize=14, markeredgewidth=2, label='Minimum Loss Value Point')
     plt.legend()
 
     plt.xlabel(f"{layer_names.get(x_idx, f'Layer {x_idx}')} {label_map[x_type]}")
